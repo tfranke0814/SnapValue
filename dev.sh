@@ -18,6 +18,10 @@ case "$1" in
         echo "🧪 Running Step 1 Database Tests..."
         bash "$PROJECT_ROOT/utilities/backend/test_step1.sh"
         ;;
+    "test-step2")
+        echo "🧪 Running Step 2 Core Backend Services Tests..."
+        bash "$PROJECT_ROOT/utilities/backend/test_step2.sh"
+        ;;
     "setup")
         echo "Setting up development environment..."
         bash "$PROJECT_ROOT/utilities/development/setup_dev_environment.sh"
@@ -31,6 +35,7 @@ case "$1" in
         echo "  ./dev.sh start      - Start the backend server"
         echo "  ./dev.sh test       - Run all backend tests"
         echo "  ./dev.sh test-step1 - Run Step 1 database tests"
+        echo "  ./dev.sh test-step2 - Run Step 2 core backend services tests"
         echo "  ./dev.sh setup      - Setup development environment"
         echo "  ./dev.sh db         - Database utilities"
         ;;

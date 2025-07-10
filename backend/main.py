@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routers import health
+from app.routers import health, appraisal
 from app.core.config import settings
 
 app = FastAPI(
@@ -23,6 +23,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(appraisal.router, prefix="/api/v1/appraisal", tags=["appraisal"])
+
 
 @app.get("/")
 async def root():

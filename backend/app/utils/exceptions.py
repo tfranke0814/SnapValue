@@ -58,6 +58,24 @@ class NotFoundError(BaseAppException):
         if identifier:
             self.details['identifier'] = identifier
 
+class DuplicateError(BaseAppException):
+    """Duplicate resource error exception"""
+    
+    def __init__(self, resource: str, identifier: str = None, details: Optional[Dict[str, Any]] = None):
+        message = f"A {resource} with the same identifier already exists."
+        if identifier:
+            message = f"{resource} with identifier '{identifier}' already exists."
+        
+        super().__init__(
+            message=message,
+            error_code="DUPLICATE_RESOURCE",
+            details=details or {},
+            status_code=status.HTTP_409_CONFLICT
+        )
+        self.details['resource'] = resource
+        if identifier:
+            self.details['identifier'] = identifier
+
 class AuthenticationError(BaseAppException):
     """Authentication error exception"""
     

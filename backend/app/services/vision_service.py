@@ -1,7 +1,6 @@
 import base64
 from typing import Dict, List, Optional, Any
 from google.cloud import vision
-from google.cloud.vision import types
 from google.cloud.exceptions import GoogleCloudError
 import json
 

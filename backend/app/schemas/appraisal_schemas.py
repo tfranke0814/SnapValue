@@ -239,6 +239,77 @@ class AppraisalListResponse(BaseModel):
     page_size: int = Field(20, description="Items per page")
     has_next: bool = Field(False, description="Whether there are more pages")
 
+class AppraisalListItemResponse(BaseModel):
+    """Appraisal list item response model"""
+    appraisal_id: str = Field(..., description="Appraisal ID")
+    user_id: Optional[int] = Field(None, description="User ID")
+    status: AppraisalStatusEnum = Field(..., description="Current appraisal status")
+    category: Optional[str] = Field(None, description="Item category")
+    submitted_at: datetime = Field(..., description="Submission timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Completion timestamp")
+    estimated_value: Optional[float] = Field(None, description="Estimated value")
+    thumbnail_url: Optional[str] = Field(None, description="Thumbnail image URL")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "appraisal_id": "appraisal_123456",
+                "user_id": 1,
+                "status": "completed",
+                "category": "electronics",
+                "submitted_at": "2024-01-15T10:30:00Z",
+                "completed_at": "2024-01-15T10:35:00Z",
+                "estimated_value": 299.99,
+                "thumbnail_url": "https://storage.googleapis.com/snapvalue/thumbnails/123456.jpg"
+            }
+        }
+
+class AppraisalHistoryStep(BaseModel):
+    """Individual step in appraisal history"""
+    step_name: str = Field(..., description="Step name")
+    status: str = Field(..., description="Step status")
+    started_at: datetime = Field(..., description="Step start timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Step completion timestamp")
+    duration_seconds: Optional[float] = Field(None, description="Step duration in seconds")
+    details: Optional[Dict[str, Any]] = Field(None, description="Step details")
+    error_message: Optional[str] = Field(None, description="Error message if step failed")
+
+class AppraisalHistoryResponse(BaseModel):
+    """Appraisal history response model"""
+    appraisal_id: str = Field(..., description="Appraisal ID")
+    total_duration_seconds: Optional[float] = Field(None, description="Total processing duration")
+    steps: List[AppraisalHistoryStep] = Field(..., description="Processing steps history")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "appraisal_id": "appraisal_123456",
+                "total_duration_seconds": 45.2,
+                "steps": [
+                    {
+                        "step_name": "image_validation",
+                        "status": "completed",
+                        "started_at": "2024-01-15T10:30:00Z",
+                        "completed_at": "2024-01-15T10:30:05Z",
+                        "duration_seconds": 5.0,
+                        "details": {"file_size": 1024000, "format": "JPEG"}
+                    },
+                    {
+                        "step_name": "ai_analysis",
+                        "status": "completed",
+                        "started_at": "2024-01-15T10:30:05Z",
+                        "completed_at": "2024-01-15T10:30:35Z",
+                        "duration_seconds": 30.0,
+                        "details": {"confidence": 0.95, "objects_detected": 3}
+                    }
+                ],
+                "created_at": "2024-01-15T10:30:00Z",
+                "updated_at": "2024-01-15T10:35:00Z"
+            }
+        }
+
 # Error Models
 class AppraisalError(BaseModel):
     """Appraisal error model"""

@@ -6,7 +6,14 @@ from google.cloud.aiplatform import gapic
 from google.cloud.exceptions import GoogleCloudError
 import vertexai
 from vertexai.language_models import TextEmbeddingModel
-from vertexai.vision_models import MultimodalEmbeddingModel
+
+# Try to import MultimodalEmbeddingModel, but handle gracefully if not available
+try:
+    from vertexai.vision_models import MultimodalEmbeddingModel
+    MULTIMODAL_AVAILABLE = True
+except ImportError:
+    MULTIMODAL_AVAILABLE = False
+    MultimodalEmbeddingModel = None
 
 from app.core.config import settings
 from app.services.base_service import BaseService
@@ -40,7 +47,17 @@ class EmbeddingService(BaseService):
             
             # Initialize models
             self.text_model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
-            self.multimodal_model = MultimodalEmbeddingModel.from_pretrained("multimodalembedding@001")
+            
+            # Initialize multimodal model if available
+            if MULTIMODAL_AVAILABLE:
+                try:
+                    self.multimodal_model = MultimodalEmbeddingModel.from_pretrained("multimodalembedding@001")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize multimodal model: {e}")
+                    self.multimodal_model = None
+            else:
+                logger.warning("MultimodalEmbeddingModel not available, multimodal features will be disabled")
+                self.multimodal_model = None
             
             log_service_call("EmbeddingService", "initialize_client", 
                            project=settings.VERTEX_AI_PROJECT,

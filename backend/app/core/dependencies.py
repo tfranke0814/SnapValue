@@ -3,7 +3,14 @@ from functools import lru_cache
 from sqlalchemy.orm import Session
 import logging
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+
 from app.database.connection import get_db
+from app.models.user import User
+from app.core.config import settings
+from app.utils.exceptions import AuthenticationError
 
 T = TypeVar('T')
 
@@ -97,6 +104,53 @@ def inject_dependencies(*service_names):
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance"""
     return logging.getLogger(name)
+
+security = HTTPBearer()
+
+def decode_access_token(token: str) -> dict:
+    """Decode and validate JWT token"""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return payload
+    except JWTError:
+        raise AuthenticationError("Invalid token")
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db_session)
+) -> User:
+    """Get current authenticated user"""
+    logger = get_logger(__name__)
+    try:
+        token = credentials.credentials
+        payload = decode_access_token(token)
+        
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise AuthenticationError("Invalid token payload")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise AuthenticationError("User not found")
+        
+        if not user.is_active:
+            raise AuthenticationError("User account is inactive")
+        
+        return user
+        
+    except AuthenticationError as e:
+        logger.warning(f"Authentication failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during authentication: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred during authentication.",
+        )
 
 def setup_dependencies():
     """Setup common dependencies"""

@@ -1,6 +1,8 @@
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, TypeVar, Generic
 from datetime import datetime
 from pydantic import BaseModel, Field
+
+T = TypeVar('T')
 
 # Base Response Models
 class BaseResponse(BaseModel):
@@ -19,7 +21,7 @@ class ErrorResponse(BaseModel):
     correlation_id: Optional[str] = Field(None, description="Request correlation ID")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": False,
                 "error_code": "VALIDATION_ERROR",
@@ -47,10 +49,10 @@ class SuccessResponse(BaseResponse):
             }
         }
 
-class PaginatedResponse(BaseModel):
+class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response model"""
-    items: List[Any] = Field(..., description="List of items")
-    total_count: int = Field(..., description="Total number of items")
+    items: List[T] = Field(..., description="List of items")
+    total: int = Field(..., description="Total number of items")
     page: int = Field(..., description="Current page number")
     page_size: int = Field(..., description="Number of items per page")
     total_pages: int = Field(..., description="Total number of pages")
@@ -178,13 +180,71 @@ class LoginResponse(BaseModel):
             }
         }
 
-class UserInfo(BaseModel):
-    """User information model"""
-    user_id: str = Field(..., description="User identifier")
+# User Management Models
+class UserRegistrationRequest(BaseModel):
+    """User registration request model"""
+    email: str = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, description="User password")
+    full_name: str = Field(..., description="User full name")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "securepassword123",
+                "full_name": "John Doe",
+                "metadata": {"source": "web", "referral": "google"}
+            }
+        }
+
+class UserRegistrationResponse(BaseModel):
+    """User registration response model"""
+    user_id: int = Field(..., description="User ID")
     email: str = Field(..., description="User email")
-    is_active: bool = Field(..., description="Whether user is active")
-    created_at: datetime = Field(..., description="User creation timestamp")
-    api_key: Optional[str] = Field(None, description="User API key")
+    full_name: str = Field(..., description="User full name")
+    api_key: str = Field(..., description="User API key")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+    message: str = Field(..., description="Registration message")
+
+class UserUpdateRequest(BaseModel):
+    """User profile update request model"""
+    full_name: Optional[str] = Field(None, description="Updated full name")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Updated metadata")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "full_name": "John Smith",
+                "metadata": {"preferences": {"notifications": True}}
+            }
+        }
+
+class UserInfo(BaseModel):
+    """User information response model"""
+    user_id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User email")
+    full_name: str = Field(..., description="User full name")
+    api_key: str = Field(..., description="User API key")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+    last_login: Optional[datetime] = Field(None, description="Last login timestamp")
+    is_active: bool = Field(True, description="Whether user is active")
+    appraisal_count: int = Field(0, description="Total appraisals submitted")
+    subscription_tier: str = Field("free", description="User subscription tier")
+
+class UserStatsResponse(BaseModel):
+    """User statistics response model"""
+    user_id: int = Field(..., description="User ID")
+    total_appraisals: int = Field(..., description="Total appraisals submitted")
+    completed_appraisals: int = Field(..., description="Completed appraisals")
+    failed_appraisals: int = Field(..., description="Failed appraisals")
+    average_processing_time: float = Field(..., description="Average processing time in seconds")
+    total_spent: float = Field(..., description="Total amount spent")
+    favorite_categories: List[str] = Field(..., description="Most used categories")
+    recent_activity: List[Dict[str, Any]] = Field(..., description="Recent activity")
+    monthly_usage: Dict[str, int] = Field(..., description="Monthly usage statistics")
+    account_created: datetime = Field(..., description="Account creation date")
+    last_appraisal: Optional[datetime] = Field(None, description="Last appraisal timestamp")
 
 # Processing Queue Models
 class QueueStatus(BaseModel):

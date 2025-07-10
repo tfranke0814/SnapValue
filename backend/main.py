@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.routers import health
+from app.api.v1.main import api_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -23,6 +24,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 async def root():
@@ -30,19 +32,25 @@ async def root():
         content={
             "message": "Welcome to SnapValue API",
             "version": "1.0.0",
-            "docs": "/docs"
+            "docs": "/docs",
+            "api_endpoints": {
+                "health": "/api/v1/health",
+                "appraisal": "/api/v1/appraisal",
+                "auth": "/api/v1/auth",
+                "monitoring": "/api/v1/monitoring",
+                "status": "/api/v1/status"
+            }
         }
     )
 
-# recieve image
-@app.get("/recieveImage")
-async def getImage(): 
-    return None
+# Remove the old placeholder endpoints
+# @app.get("/recieveImage")
+# async def getImage(): 
+#     return None
 
-# todo
-@app.get("/returnImage")
-async def getImage(): 
-    return None
+# @app.get("/returnImage")
+# async def getImage(): 
+#     return None
 
 if __name__ == "__main__":
     import uvicorn

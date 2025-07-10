@@ -6,11 +6,13 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
+  Alert,
   Dimensions,
   Platform,
   StatusBar,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { submitAppraisalAndWait } from '../services/api';
 import { COLORS } from '../constants/colors';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,26 +32,19 @@ const PreviewScreen = () => {
   }
 
   const handleAppraise = async () => {
-    setLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      setLoading(true);
+      // Call backend API
+      const result = await submitAppraisalAndWait(photo.uri);
       setLoading(false);
-      // Mock appraisal result
       navigation.navigate('Result', {
-        photo: photo,
-        appraisalResult: {
-          estimatedValue: 1200,
-          confidence: 0.85,
-          category: 'Electronics',
-          condition: 'Good',
-          similarItems: [
-            { price: 1100, condition: 'Fair', link: '#' },
-            { price: 1300, condition: 'Excellent', link: '#' },
-          ],
-        },
+        photo,
+        appraisalResult: result,
       });
-    }, 2000);
+    } catch (err) {
+      setLoading(false);
+      Alert.alert('Appraisal Failed', err.message || 'Something went wrong');
+    }
   };
 
   return (

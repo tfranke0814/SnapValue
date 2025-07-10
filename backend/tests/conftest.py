@@ -9,6 +9,12 @@ from sqlalchemy.pool import StaticPool
 from typing import Generator, AsyncGenerator
 import tempfile
 import os
+from unittest.mock import Mock, AsyncMock
+from fastapi.testclient import TestClient
+from datetime import datetime, timedelta
+import json
+import io
+from PIL import Image
 
 # Import your database models and configuration
 from app.database.base import Base
@@ -16,6 +22,7 @@ from app.database.connection import get_db
 from app.models.user import User
 from app.models.appraisal import Appraisal
 from app.models.market_data import MarketData
+from app.main import app
 
 
 @pytest.fixture(scope="session")
@@ -177,3 +184,175 @@ def create_market_data(db_session, sample_market_data):
         db_session.refresh(market_item)
         return market_item
     return _create_market_data
+
+
+# API Testing Fixtures
+@pytest.fixture
+def test_client(override_get_db):
+    """Create a test client with database dependency override."""
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides = {}
+
+
+@pytest.fixture
+def authenticated_client(test_client, create_user):
+    """Create an authenticated test client."""
+    # Create a test user
+    user = create_user(email="auth@test.com", api_key="test_auth_key")
+    
+    # Set authentication header
+    test_client.headers.update({"Authorization": f"Bearer test_auth_key"})
+    
+    return test_client, user
+
+
+# Mock Service Fixtures
+@pytest.fixture
+def mock_storage_service():
+    """Mock storage service for testing."""
+    mock = Mock()
+    mock.upload_image = AsyncMock(return_value={
+        'url': 'https://example.com/test-image.jpg',
+        'path': 'test/path/image.jpg',
+        'size': 1024
+    })
+    mock.delete_image = AsyncMock(return_value=True)
+    return mock
+
+
+@pytest.fixture
+def mock_vision_service():
+    """Mock vision service for testing."""
+    mock = Mock()
+    mock.analyze_image = AsyncMock(return_value={
+        'labels': [
+            {'description': 'smartphone', 'score': 0.95},
+            {'description': 'electronics', 'score': 0.90}
+        ],
+        'objects': [
+            {'name': 'mobile phone', 'score': 0.92}
+        ],
+        'text': {'full_text': ''},
+        'faces': []
+    })
+    return mock
+
+
+@pytest.fixture
+def mock_ai_service():
+    """Mock AI service for testing."""
+    mock = Mock()
+    mock.generate_embeddings = AsyncMock(return_value=[0.1, 0.2, 0.3, 0.4, 0.5])
+    mock.extract_features = AsyncMock(return_value={
+        'category': 'electronics',
+        'brand': 'Apple',
+        'model': 'iPhone'
+    })
+    return mock
+
+
+@pytest.fixture
+def mock_market_service():
+    """Mock market service for testing."""
+    mock = Mock()
+    mock.find_similar_items = AsyncMock(return_value=[
+        {'price': 299.99, 'similarity': 0.95, 'source': 'ebay'},
+        {'price': 315.00, 'similarity': 0.90, 'source': 'amazon'}
+    ])
+    mock.get_market_analysis = AsyncMock(return_value={
+        'average_price': 307.50,
+        'price_range': {'min': 250.00, 'max': 350.00},
+        'market_activity': 'high'
+    })
+    return mock
+
+
+# Test Data Fixtures
+@pytest.fixture
+def test_image_file():
+    """Create a test image file for upload testing."""
+    # Create a simple test image
+    img = Image.new('RGB', (100, 100), color='red')
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='JPEG')
+    img_bytes.seek(0)
+    
+    return img_bytes
+
+
+@pytest.fixture
+def test_image_data():
+    """Test image metadata."""
+    return {
+        'filename': 'test_image.jpg',
+        'content_type': 'image/jpeg',
+        'size': 1024
+    }
+
+
+@pytest.fixture
+def jwt_token(create_user):
+    """Create a valid JWT token for testing."""
+    from app.api.v1.auth import create_access_token
+    
+    user_data = {"sub": "test_user_123", "email": "test@example.com"}
+    token = create_access_token(data=user_data)
+    return token
+
+
+@pytest.fixture
+def auth_headers(jwt_token):
+    """Authorization headers for API testing."""
+    return {"Authorization": f"Bearer {jwt_token}"}
+
+
+# Performance Testing Fixtures
+@pytest.fixture
+def performance_test_data():
+    """Generate test data for performance testing."""
+    return {
+        'batch_size': 10,
+        'concurrent_requests': 5,
+        'timeout_seconds': 30
+    }
+
+
+# Mock External Services
+@pytest.fixture
+def mock_google_cloud_services():
+    """Mock Google Cloud services."""
+    mocks = {
+        'storage': Mock(),
+        'vision': Mock(),
+        'vertex_ai': Mock()
+    }
+    
+    # Configure storage mock
+    mocks['storage'].upload_blob = Mock(return_value='gs://bucket/path/file.jpg')
+    mocks['storage'].delete_blob = Mock(return_value=True)
+    
+    # Configure vision mock
+    mocks['vision'].detect_objects = Mock(return_value=[
+        {'name': 'smartphone', 'confidence': 0.95}
+    ])
+    
+    # Configure Vertex AI mock
+    mocks['vertex_ai'].predict = Mock(return_value={
+        'predictions': [{'embeddings': [0.1, 0.2, 0.3]}]
+    })
+    
+    return mocks
+
+
+@pytest.fixture
+def error_scenarios():
+    """Common error scenarios for testing."""
+    return {
+        'network_timeout': TimeoutError("Network timeout"),
+        'invalid_image': ValueError("Invalid image format"),
+        'service_unavailable': ConnectionError("Service unavailable"),
+        'quota_exceeded': Exception("Quota exceeded"),
+        'authentication_failed': Exception("Authentication failed")
+    }

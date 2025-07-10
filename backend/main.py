@@ -34,6 +34,16 @@ async def root():
         }
     )
 
+# recieve image
+@app.get("/recieveImage")
+async def getImage(): 
+    return None
+
+# todo
+@app.get("/returnImage")
+async def getImage(): 
+    return None
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

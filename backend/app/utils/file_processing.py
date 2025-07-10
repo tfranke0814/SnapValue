@@ -293,3 +293,12 @@ def resize_image_to_fit(file_content: bytes, max_width: int, max_height: int) ->
     """Resize image to fit within dimensions"""
     processor = FileProcessor()
     return processor.resize_image(file_content, max_width, max_height)
+
+def optimize_image(file_content: bytes, quality: int = 85) -> bytes:
+    """Optimize image (alias for optimize_image_for_web)"""
+    return optimize_image_for_web(file_content, quality)
+
+def convert_image_format(file_content: bytes, target_format: str) -> bytes:
+    """Convert image to target format"""
+    processor = FileProcessor()
+    return processor.convert_format(file_content, target_format)

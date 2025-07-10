@@ -332,24 +332,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# ===== PROJECT SPECIFIC =====
-
-# Temporary files
-*.tmp
-*.temp
-
-# Database files
-*.db
-*.sqlite
-
-# Configuration files with sensitive data
-config.local.*
-secrets.*
-
-# Build artifacts
-*.tar.gz
-*.zip
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
+# misc
+.vscode/
+.claude/
+COPILOT_AGENT_PLAN.md
+credentials/
+credentials/gcs-credentials

@@ -9,6 +9,7 @@ import {
   Dimensions,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
@@ -29,8 +30,52 @@ const ResultScreen = () => {
   }
 
   const handleListItem = () => {
-    // TODO: Navigate to listing creation screen
-    console.log('Create listing with appraisal:', appraisalResult);
+    // Show options for listing the item
+    Alert.alert(
+      'List Your Item',
+      'Choose how you want to list this item:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Create Listing',
+          onPress: () => {
+            // TODO: Navigate to listing creation screen when implemented
+            Alert.alert(
+              'Coming Soon!',
+              'Listing creation feature will be available soon. For now, you can save this appraisal or share it with others.',
+              [{ text: 'OK' }]
+            );
+          },
+        },
+        {
+          text: 'Save Appraisal',
+          onPress: () => {
+            Alert.alert(
+              'Appraisal Saved!',
+              'Your appraisal has been saved to your profile.',
+              [{ text: 'OK' }]
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const handleRetakePhoto = () => {
+    // Navigate back to camera screen
+    navigation.navigate('CameraMain');
+  };
+
+  const handleGoHome = () => {
+    // Navigate to main tabs (Home screen)
+    navigation.navigate('ForYou');
   };
 
   return (
@@ -41,7 +86,7 @@ const ResultScreen = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('MainTabs')}
+          onPress={handleGoBack}
         >
           <Icon name="arrow-back" size={24} color={COLORS.black} />
         </TouchableOpacity>
@@ -149,6 +194,25 @@ const ResultScreen = () => {
               </TouchableOpacity>
             </View>
           ))}
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.secondaryButton}
+            onPress={handleRetakePhoto}
+          >
+            <Icon name="camera-alt" size={20} color={COLORS.primary} />
+            <Text style={styles.secondaryButtonText}>Retake Photo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.secondaryButton}
+            onPress={handleGoHome}
+          >
+            <Icon name="home" size={20} color={COLORS.primary} />
+            <Text style={styles.secondaryButtonText}>Go Home</Text>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.bottomPadding} />
@@ -371,7 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginRight: 12,
   },
   similarItemInfo: {
     marginLeft: 12,
@@ -400,6 +464,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginRight: 4,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    flex: 0.48,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  secondaryButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   bottomPadding: {
     height: 100,
